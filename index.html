@@ -1,0 +1,1031 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>二極體導通判斷與橋式整流器｜LLM Wiki 互動教學簡報</title>
+<style>
+:root {
+  --bg: #f6f8fb;
+  --surface: #ffffff;
+  --surface-alt: #f0f4f9;
+  --ink: #172030;
+  --muted: #52627a;
+  --border: #d8e1ec;
+  --primary: #1b5e9e;
+  --primary-soft: #e7f1fb;
+  --accent: #0f7b6c;
+  --accent-soft: #e6f6f3;
+  --warn: #b45309;
+  --warn-soft: #fef3e2;
+  --danger: #b91c1c;
+  --danger-soft: #fdecec;
+  --shadow: 0 8px 28px rgba(23, 32, 48, 0.06);
+  font-family: 'Noto Sans TC', 'Microsoft JhengHei', 'PingFang TC', system-ui, -apple-system, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); min-height: 100vh; }
+body { display: flex; flex-direction: column; }
+
+header.topbar {
+  position: sticky; top: 0; z-index: 20;
+  background: rgba(255,255,255,0.94); backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 28px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.96rem; color: var(--ink); }
+.brand-badge {
+  background: var(--primary); color: #fff; font-size: 0.74rem; letter-spacing: .06em;
+  padding: 4px 9px; border-radius: 6px; font-weight: 700;
+}
+.top-meta { display: flex; align-items: center; gap: 14px; font-size: 0.88rem; color: var(--muted); }
+.slide-counter {
+  font-weight: 700; color: var(--primary); background: var(--primary-soft);
+  padding: 4px 11px; border-radius: 999px; font-variant-numeric: tabular-nums;
+}
+
+.progress-wrap { height: 4px; background: #e3eaf3; width: 100%; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); width: 9%; transition: width .25s ease; }
+
+main.deck {
+  flex: 1; width: 100%; max-width: 1120px; margin: 24px auto 12px; padding: 0 22px;
+}
+
+section.slide {
+  display: none; background: var(--surface); border: 1px solid var(--border);
+  border-radius: 18px; padding: 34px 40px 26px; box-shadow: var(--shadow);
+  min-height: 620px; flex-direction: column; justify-content: space-between;
+}
+section.slide.active { display: flex; animation: fadeIn .22s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+.slide-body { flex: 1; }
+.eyebrow {
+  display: inline-block; font-size: 0.78rem; font-weight: 700; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--primary); background: var(--primary-soft);
+  padding: 4px 10px; border-radius: 999px; margin-bottom: 12px;
+}
+h1 { font-size: clamp(1.95rem, 3.8vw, 2.9rem); line-height: 1.22; margin: 6px 0 14px; color: var(--ink); }
+h2 { font-size: clamp(1.45rem, 2.5vw, 2.05rem); line-height: 1.28; margin: 2px 0 14px; color: var(--ink); }
+h3 { font-size: 1.08rem; margin: 0 0 8px; color: var(--primary); }
+p { margin: 0 0 12px; line-height: 1.72; color: #2b394f; font-size: 1rem; }
+ul, ol { margin: 6px 0 12px; padding-left: 22px; line-height: 1.72; color: #2b394f; }
+li { margin-bottom: 6px; }
+
+.lead { font-size: 1.12rem; color: var(--muted); max-width: 780px; }
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 16px 0; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+.grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 14px 0; }
+
+.card {
+  background: var(--surface-alt); border: 1px solid var(--border);
+  border-radius: 14px; padding: 18px 20px;
+}
+.card.white { background: #fff; }
+.card.accent { background: var(--accent-soft); border-color: #b8e3db; }
+.card.warn { background: var(--warn-soft); border-color: #f3d29b; }
+.card.primary { background: var(--primary-soft); border-color: #bfd9f5; }
+
+.callout {
+  border-left: 4px solid var(--primary); background: var(--primary-soft);
+  padding: 12px 16px; border-radius: 0 10px 10px 0; margin: 12px 0; font-size: 0.95rem;
+}
+.callout.warn { border-left-color: var(--warn); background: var(--warn-soft); color: #6c3504; }
+.callout.accent { border-left-color: var(--accent); background: var(--accent-soft); color: #0c4d44; }
+
+.formula-box {
+  background: #f8fafd; border: 1.5px solid #c4d7ec; border-radius: 12px;
+  padding: 14px 18px; margin: 12px 0; font-family: 'Cambria Math', 'Times New Roman', Georgia, serif;
+  font-size: 1.24rem; color: var(--ink); text-align: center; font-weight: 600;
+}
+.formula-sub {
+  display: block; font-family: 'Noto Sans TC', system-ui, sans-serif;
+  font-size: 0.84rem; font-weight: 400; color: var(--muted); margin-top: 6px;
+}
+
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.94rem; }
+th, td { border: 1px solid var(--border); padding: 10px 12px; text-align: left; vertical-align: top; }
+th { background: var(--surface-alt); color: var(--ink); font-weight: 700; }
+
+.chip {
+  display: inline-block; padding: 5px 12px; border-radius: 999px;
+  font-size: 0.84rem; font-weight: 600; margin: 4px 6px 4px 0;
+  background: var(--surface-alt); border: 1px solid var(--border); color: var(--ink);
+}
+.chip.blue { background: var(--primary-soft); border-color: #bfd9f5; color: var(--primary); }
+.chip.teal { background: var(--accent-soft); border-color: #b8e3db; color: var(--accent); }
+
+.svg-box {
+  background: #ffffff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.svg-box svg { width: 100%; height: auto; max-height: 290px; }
+.svg-caption { font-size: 0.84rem; color: var(--muted); margin-top: 6px; text-align: center; }
+
+.controls-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 10px 0 14px; }
+button.btn {
+  border: 1px solid var(--border); background: #fff; color: var(--ink);
+  padding: 9px 15px; border-radius: 10px; font-size: 0.92rem; font-weight: 600;
+  cursor: pointer; transition: all .15s ease;
+}
+button.btn:hover:not(:disabled) { border-color: var(--primary); color: var(--primary); background: var(--primary-soft); }
+button.btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+button.btn.primary:hover:not(:disabled) { background: #154b7e; color: #fff; }
+button.btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+button.btn.teal.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+button.btn.warn.active { background: var(--warn); color: #fff; border-color: var(--warn); }
+button.btn:disabled { opacity: .4; cursor: not-allowed; }
+
+input[type=range] { width: 100%; accent-color: var(--primary); cursor: pointer; }
+.metric-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+.metric {
+  background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; text-align: center;
+}
+.metric .k { font-size: 0.78rem; color: var(--muted); }
+.metric .v { font-size: 1.18rem; font-weight: 800; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.status-on { color: var(--accent); }
+.status-off { color: var(--danger); }
+
+.step-card {
+  background: #fff; border: 1px solid var(--border); border-top: 4px solid var(--primary);
+  border-radius: 12px; padding: 14px;
+}
+.step-num {
+  display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center;
+  border-radius: 50%; background: var(--primary); color: #fff; font-size: 0.8rem; font-weight: 700; margin-bottom: 6px;
+}
+
+.quiz-item {
+  background: var(--surface-alt); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 16px; margin-bottom: 12px;
+}
+.quiz-item h3 { color: var(--ink); font-size: 0.98rem; margin-bottom: 8px; }
+.quiz-opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.quiz-fb { margin-top: 8px; font-size: 0.9rem; font-weight: 600; min-height: 22px; }
+.quiz-fb.ok { color: var(--accent); }
+.quiz-fb.no { color: var(--danger); }
+
+.source-footer {
+  margin-top: 18px; padding-top: 12px; border-top: 1px dashed var(--border);
+  font-size: 0.8rem; color: var(--muted);
+  display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;
+}
+.source-footer code {
+  background: var(--surface-alt); padding: 2px 6px; border-radius: 5px;
+  font-family: Consolas, 'Courier New', monospace; color: var(--primary); font-size: 0.78rem;
+}
+
+footer.nav-footer {
+  max-width: 1120px; width: 100%; margin: 4px auto 22px; padding: 0 22px;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+}
+.dots { display: flex; gap: 6px; flex-wrap: wrap; }
+.dot {
+  width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0;
+  background: #cbd6e4; cursor: pointer; transition: transform .15s, background .15s;
+}
+.dot.active { background: var(--primary); transform: scale(1.25); }
+.nav-btns { display: flex; gap: 10px; align-items: center; }
+
+@media (max-width: 820px) {
+  section.slide { padding: 22px 18px 18px; min-height: auto; }
+  .grid-2, .grid-3, .grid-4, .metric-grid { grid-template-columns: 1fr; }
+  header.topbar { padding: 10px 16px; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-badge">LLM WIKI DECK</span>
+    <span>二極體導通判斷與橋式整流器（零基礎入門）</span>
+  </div>
+  <div class="top-meta">
+    <span>鍵盤 ← / → 或按鈕翻頁</span>
+    <span class="slide-counter" id="counter">01 / 12</span>
+  </div>
+</header>
+<div class="progress-wrap"><div class="progress-bar" id="progressBar"></div></div>
+
+<main class="deck">
+
+<!-- SLIDE 1: Cover -->
+<section class="slide active" data-title="封面">
+  <div class="slide-body">
+    <span class="eyebrow">Karpathy LLM Wiki 驅動教學簡報 · 單檔離線可用</span>
+    <h1>二極體導通判斷<br>與橋式整流器入門</h1>
+    <p class="lead">專為「沒有電子學基礎、僅認識基本電壓／電流／歐姆定律」的初學者設計。本簡報所有觀念、公式與三組實測查詢教學，皆直接追溯自專案 <code>wiki/</code> 知識庫與 5 份 <code>raw/</code> 來源筆記。</p>
+    <div style="margin: 18px 0;">
+      <span class="chip blue">5 篇 Raw 來源（中文改寫導讀筆記）</span>
+      <span class="chip teal">3 組實測 Query（Q1–Q3）</span>
+      <span class="chip">互動式導通判斷實驗</span>
+      <span class="chip">橋式雙半週動態路徑圖</span>
+      <span class="chip">常見迷思互動測驗</span>
+    </div>
+    <div class="grid-3" style="margin-top: 20px;">
+      <div class="card">
+        <h3>1. 看懂方向與模型</h3>
+        <p style="margin:0;font-size:0.93rem;">從 PN 接面與止回閥直覺出發，區分理想模型與固定壓降模型，正確理解 <strong>0.7 V 近似條件</strong>。</p>
+      </div>
+      <div class="card">
+        <h3>2. 掌握假設與驗證</h3>
+        <p style="margin:0;font-size:0.93rem;">不再用猜的！練習「標記 A/K → 假設 → 計算 → 驗證」四步驟判斷導通與截止。</p>
+      </div>
+      <div class="card">
+        <h3>3. 搞懂橋式整流器</h3>
+        <p style="margin:0;font-size:0.93rem;">追蹤正負半週兩顆串聯導通的迴路，理解為何負載電流方向一致且總壓降為 <strong>2 V<sub>F</sub></strong>。</p>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/index.md</code> · <code>wiki/curriculum-order.md</code></span>
+    <span>先備知識：電壓、電流、歐姆定律</span>
+  </div>
+</section>
+
+<!-- SLIDE 2: PN Junction & Bias -->
+<section class="slide" data-title="PN 接面與偏壓">
+  <div class="slide-body">
+    <span class="eyebrow">01 / 基本物理直覺（S01）</span>
+    <h2>PN 接面與正／反向偏壓：為什麼電流只容易單向走？</h2>
+    <p>把 P 型與 N 型兩種半導體接在一起，交界處會自然形成一道「緩衝門檻（<strong>空乏區</strong>）」：順著方向推能把門檻壓低，反著拉則會擋住大多數電流。</p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>核心物理觀念（白話版）</h3>
+        <ul>
+          <li><strong>PN 接面與空乏區</strong>：兩側的<strong>載子</strong>（傳遞電荷的微小粒子，如電子與電洞）因濃度差自然<strong>擴散</strong>，建立內建電場並形成缺乏自由載子的空乏區。</li>
+          <li><strong>熱平衡不是靜止</strong>：無外加電源時，擴散電流與電場引起的<strong>漂移電流</strong>大小相等、方向相反，淨電流為 0，但兩種作用同時存在。</li>
+          <li><strong>正向偏壓</strong>：降低載子跨越障礙，有利於電流通過。</li>
+          <li><strong>反向偏壓</strong>：抑制多數載子跨越接面，呈現高阻抗阻擋狀態，但物理上仍有<strong>少量反向漏電流</strong>（並非絕對 0）。</li>
+        </ul>
+      </div>
+      <div class="svg-box">
+        <svg viewBox="0 0 420 225" aria-label="PN接面正反偏示意圖">
+          <!-- Forward Bias -->
+          <text x="16" y="22" font-size="13" font-weight="700" fill="#0f7b6c">正向偏壓：障礙降低，電流易通過</text>
+          <rect x="20" y="34" width="145" height="58" rx="8" fill="#e7f1fb" stroke="#1b5e9e" stroke-width="1.5"/>
+          <rect x="165" y="34" width="34" height="58" fill="#fef3e2" stroke="#d97706" stroke-dasharray="4 3"/>
+          <rect x="199" y="34" width="145" height="58" rx="8" fill="#e6f6f3" stroke="#0f7b6c" stroke-width="1.5"/>
+          <text x="92" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e9e">P 型（陽極 A）</text>
+          <text x="272" y="68" text-anchor="middle" font-size="14" font-weight="700" fill="#0f7b6c">N 型（陰極 K）</text>
+          <text x="182" y="106" text-anchor="middle" font-size="11" fill="#b45309">空乏區變窄</text>
+          <path d="M 358 63 L 398 63" stroke="#0f7b6c" stroke-width="3" marker-end="url(#arrGreen)"/>
+          <text x="378" y="54" text-anchor="middle" font-size="11" font-weight="700" fill="#0f7b6c">易導通</text>
+          <!-- Reverse Bias -->
+          <text x="16" y="136" font-size="13" font-weight="700" fill="#b91c1c">反向偏壓：抑制多數載子（仍有極小反向漏電流）</text>
+          <rect x="20" y="148" width="115" height="58" rx="8" fill="#e7f1fb" stroke="#1b5e9e" stroke-width="1.5"/>
+          <rect x="135" y="148" width="94" height="58" fill="#fdecec" stroke="#b91c1c" stroke-dasharray="4 3"/>
+          <rect x="229" y="148" width="115" height="58" rx="8" fill="#e6f6f3" stroke="#0f7b6c" stroke-width="1.5"/>
+          <text x="77" y="182" text-anchor="middle" font-size="14" font-weight="700" fill="#1b5e9e">P 型 (A)</text>
+          <text x="182" y="182" text-anchor="middle" font-size="12" font-weight="700" fill="#b91c1c">空乏區阻擋</text>
+          <text x="286" y="182" text-anchor="middle" font-size="14" font-weight="700" fill="#0f7b6c">N 型 (K)</text>
+          <line x1="360" y1="168" x2="392" y2="188" stroke="#b91c1c" stroke-width="3"/>
+          <line x1="392" y1="168" x2="360" y2="188" stroke="#b91c1c" stroke-width="3"/>
+          <defs>
+            <marker id="arrGreen" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#0f7b6c"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="svg-caption">圖 1：PN 接面在正向偏壓與反向偏壓下的行為對比示意</div>
+      </div>
+    </div>
+    <div class="callout warn">
+      <strong>觀念提醒（對應迷思 M1、M2）</strong>：不可把正向導通誤解成「電壓一超過 0.7 V 就瞬間出現固定電流」；實際電流取決於整體外接電路條件。
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/pn-junction-and-bias.md</code> · <code>wiki/misconceptions/common-diode-and-rectifier-misconceptions.md</code></span>
+    <span>原始導讀：<code>raw/S01_OpenStax_PN接面.md</code>（OpenStax 9.7）</span>
+  </div>
+</section>
+
+<!-- SLIDE 3: Diode Symbol & Direction -->
+<section class="slide" data-title="符號極性與電流方向">
+  <div class="slide-body">
+    <span class="eyebrow">02 / 電路符號與極性（S02）</span>
+    <h2>二極體符號判讀：分析電路前，先標記陽極 A 與陰極 K</h2>
+    <p>二極體類似水管中的「<strong>單向止回閥</strong>」：順著箭頭方向（傳統電流 <strong>A → K</strong>）容易流過，反方向則顯著受阻。</p>
+    <div class="grid-2">
+      <div class="svg-box">
+        <svg viewBox="0 0 420 200" aria-label="二極體電路符號與陽極陰極標示">
+          <line x1="40" y1="95" x2="170" y2="95" stroke="#172030" stroke-width="4"/>
+          <!-- Triangle pointing right (A -> K) -->
+          <polygon points="170,58 170,132 238,95" fill="#e7f1fb" stroke="#1b5e9e" stroke-width="4" stroke-linejoin="round"/>
+          <!-- Cathode Bar -->
+          <line x1="238" y1="54" x2="238" y2="136" stroke="#1b5e9e" stroke-width="6" stroke-linecap="round"/>
+          <line x1="238" y1="95" x2="380" y2="95" stroke="#172030" stroke-width="4"/>
+          <circle cx="52" cy="95" r="6" fill="#1b5e9e"/>
+          <circle cx="368" cy="95" r="6" fill="#0f7b6c"/>
+          <text x="52" y="70" text-anchor="middle" font-size="16" font-weight="800" fill="#1b5e9e">陽極 A</text>
+          <text x="52" y="124" text-anchor="middle" font-size="12" fill="#52627a">(Anode)</text>
+          <text x="368" y="70" text-anchor="middle" font-size="16" font-weight="800" fill="#0f7b6c">陰極 K</text>
+          <text x="368" y="124" text-anchor="middle" font-size="12" fill="#52627a">(Cathode · 橫線端)</text>
+          <!-- Current arrow -->
+          <path d="M 110 165 L 300 165" stroke="#0f7b6c" stroke-width="3" marker-end="url(#arrGreen2)"/>
+          <text x="210" y="187" text-anchor="middle" font-size="13" font-weight="700" fill="#0f7b6c">傳統正向電流方向 I_D：陽極 A → 陰極 K</text>
+          <defs>
+            <marker id="arrGreen2" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#0f7b6c"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="svg-caption">圖 2：二極體標準符號（三角形尖端所抵之橫線側為陰極 K）</div>
+      </div>
+      <div class="card">
+        <h3>初學者三個必守習慣</h3>
+        <ol>
+          <li><strong>認明橫線側為陰極 K</strong>：三角形寬邊是陽極 <code>A</code>，尖端頂住的直線是陰極 <code>K</code>。</li>
+          <li><strong>先標記再算題</strong>：看到任何二極體電路，動筆前先標出每顆元件的 <code>A</code> 與 <code>K</code>，並標出正向跨壓 <code>V_D = V_A − V_K</code>。</li>
+          <li><strong>偏壓看「兩端相對電位」</strong>：判斷正／反向偏壓，要比較 <code>V_A</code> 與 <code>V_K</code> 的高低差，不能只看單一端點是不是接正電。</li>
+        </ol>
+        <div class="callout" style="margin-bottom:0;">
+          <strong>類比界線</strong>：止回閥幫助建立直覺，但真實二極體並非零壓降、零漏電流的完美開關，接下來需選定電路分析模型。
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/diode-symbol-and-direction.md</code> · <code>wiki/misconceptions/common-diode-and-rectifier-misconceptions.md</code> (M3)</span>
+    <span>原始導讀：<code>raw/S02_AAC_二極體符號方向.md</code>（All About Circuits）</span>
+  </div>
+</section>
+
+<!-- SLIDE 4: Query Q2 — Models Comparison -->
+<section class="slide" data-title="Query Q2：模型比較與 0.7 V 條件">
+  <div class="slide-body">
+    <span class="eyebrow">03 / Query Q2 教學成果 · 電路模型（S03）</span>
+    <h2>理想模型 vs 固定壓降模型：0.7 V 到底是什麼？</h2>
+    <p>二極體是非線性元件，<strong>未知導通狀態前不可直接套用疊加原理</strong>。工程上會依精確度需求選擇簡化模型（<strong>短路</strong>＝理想導線 <code>V=0</code>；<strong>開路</strong>＝斷開無電流 <code>I=0</code>）：</p>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:20%;">簡化模型</th>
+          <th style="width:23%;">導通（ON）等效</th>
+          <th style="width:17%;">截止（OFF）等效</th>
+          <th style="width:40%;">適用分析情境與限制</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>理想二極體模型</strong><br><small style="color:var(--muted);">Ideal Model</small></td>
+          <td>近似<strong>短路</strong><br>（<code>V_D = 0 V</code>）</td>
+          <td>近似<strong>開路</strong><br>（<code>I_D = 0 A</code>）</td>
+          <td>適合快速定性判斷方向與導通趨勢，或電源電壓遠大於壓降時的粗估；忽略正向壓降與漏電流。</td>
+        </tr>
+        <tr style="background:#f1f8fe;">
+          <td><strong>固定壓降模型</strong><br><small style="color:var(--primary);font-weight:700;">CVD Model（入門主力）</small></td>
+          <td>近似固定正向壓降<br>（矽常用 <strong><code>V_F ≈ 0.7 V</code></strong>）</td>
+          <td>近似<strong>開路</strong><br>（<code>I_D = 0 A</code>）</td>
+          <td>適合入門定量計算與整流壓降估算（如橋式整流扣 <code>2 V_F</code>）。較貼近實際又維持線性好算。</td>
+        </tr>
+        <tr>
+          <td><strong>分段線性模型</strong><br><small style="color:var(--muted);">Piecewise-Linear</small></td>
+          <td>固定壓降串聯<strong>斜率／等效電阻</strong></td>
+          <td>近似<strong>開路</strong></td>
+          <td>更貼近真實特性，反映「電流增大時，實際壓降也會隨之略有上升」。</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="callout warn">
+      <strong>Query Q2 核心釐清 — 0.7 V 的嚴格適用條件</strong>：<code>0.7 V</code> 僅是<strong>矽（Si）二極體在固定壓降模型（CVD）中的入門近似值</strong>，<strong>絕非</strong>所有材料、所有電流下皆不變的物理常數。（來源限制：現有 5 份來源未涵蓋鍺／蕭特基／LED 壓降表與 Shockley 指數公式。）
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/diode-circuit-models.md</code> · <code>reports/query-verification.md</code> (Q2)</span>
+    <span>原始導讀：<code>raw/S03_LibreTexts_二極體分析模型.md</code> · <code>raw/S01_OpenStax_PN接面.md</code></span>
+  </div>
+</section>
+
+<!-- SLIDE 5: Query Q1 — Assume & Check SOP -->
+<section class="slide" data-title="Query Q1：導通判斷四步驟">
+  <div class="slide-body">
+    <span class="eyebrow">04 / Query Q1 教學成果 · 導通判斷 SOP（S02 + S03）</span>
+    <h2>固定壓降模型下如何判斷導通？四步驟「先假設、再驗證」</h2>
+    <p>判斷導通不能光靠直覺硬猜：先代換成線性模型計算，最後一定要「回頭驗算」結果是否與假設矛盾！</p>
+    <div class="grid-4">
+      <div class="step-card">
+        <span class="step-num">1</span>
+        <h3>標記 A / K</h3>
+        <p style="font-size:0.88rem;margin:0;">標出陽極 <code>A</code>、陰極 <code>K</code>（橫線側），定義正向電流 <code>I_D (A→K)</code> 與 <code>V_D = V_A − V_K</code>。</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">2</span>
+        <h3>選模型並假設</h3>
+        <p style="font-size:0.88rem;margin:0;">採 CVD（矽約 <code>0.7 V</code>）：假設 <strong>ON</strong> 換成 <code>0.7 V</code> 定壓降；假設 <strong>OFF</strong> 換成開路 <code>I_D = 0</code>。</p>
+      </div>
+      <div class="step-card">
+        <span class="step-num">3</span>
+        <h3>列式計算</h3>
+        <p style="font-size:0.88rem;margin:0;">用歐姆定律與迴路電壓守恆（KVL）／節點電流守恆（KCL），求出 <code>I_D</code> 或開路 <code>V_D</code>。</p>
+      </div>
+      <div class="step-card" style="border-top-color:var(--accent);">
+        <span class="step-num" style="background:var(--accent);">4</span>
+        <h3 style="color:var(--accent);">驗證是否矛盾</h3>
+        <p style="font-size:0.88rem;margin:0;">假設 ON 須 <code>I_D &gt; 0</code>；假設 OFF 須 <code>V_D ≤ V_F</code>。若矛盾，立刻改假設重算！</p>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:14px;">
+      <div class="card accent">
+        <h3 style="color:var(--accent);">教學演算示意 A：電源 5 V + 1 kΩ（導通成立）</h3>
+        <p style="font-size:0.92rem;margin-bottom:6px;">假設 ON（矽 CVD <code>V_F ≈ 0.7 V</code>）：</p>
+        <div class="formula-box" style="margin:6px 0;padding:10px;font-size:1.1rem;">I<sub>D</sub> = (5 V − 0.7 V) / 1000 Ω = 4.3 mA</div>
+        <p style="font-size:0.9rem;margin:0;"><strong>驗證</strong>：<code>I_D = 4.3 mA &gt; 0</code>（順向 <code>A→K</code>）→ <strong>ON 假設成立</strong>。</p>
+      </div>
+      <div class="card warn">
+        <h3 style="color:var(--warn);">教學演算示意 B：電源 0.4 V + 1 kΩ（推翻重算）</h3>
+        <p style="font-size:0.92rem;margin-bottom:6px;">若先假設 ON（矽 CVD <code>V_F ≈ 0.7 V</code>）：</p>
+        <div class="formula-box" style="margin:6px 0;padding:10px;font-size:1.1rem;">I<sub>D</sub> = (0.4 V − 0.7 V) / 1000 Ω = −0.3 mA（矛盾！）</div>
+        <p style="font-size:0.9rem;margin:0;"><strong>修正</strong>：電流為負違反單向性 → 改假設 <strong>OFF</strong>（<code>I_D = 0</code>，開路 <code>V_D = 0.4 V ≤ 0.7 V</code>）→ <strong>OFF 成立</strong>。</p>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/procedures/diode-conduction-assume-and-check.md</code> · <code>reports/query-verification.md</code> (Q1)</span>
+    <span>透明標註：數字示意係結合先備歐姆定律與 <code>raw/S03</code> CVD 原則</span>
+  </div>
+</section>
+
+<!-- SLIDE 6: Interactive Conduction Simulator -->
+<section class="slide" data-title="互動實驗：二極體導通判斷">
+  <div class="slide-body">
+    <span class="eyebrow">05 / 動手實驗 · 固定壓降模型互動模擬</span>
+    <h2>互動式導通判斷：調整輸入電壓，觀察「假設 → 驗證」結果</h2>
+    <p>拖動滑桿改變直流電源 <code>V_in</code>（串聯電阻 <code>R = 1 kΩ</code> 與一顆順向矽二極體，固定壓降模型近似 <code>V_F ≈ 0.7 V</code>），即時觀察系統如何判定導通或截止：</p>
+    <div class="grid-2">
+      <div class="card white">
+        <label for="vinSlider" style="font-weight:700;display:flex;justify-content:space-between;margin-bottom:8px;">
+          <span>輸入電源電壓 V<sub>in</sub></span>
+          <span style="color:var(--primary);font-size:1.15rem;" id="vinLabel">3.0 V</span>
+        </label>
+        <input type="range" id="vinSlider" min="-2" max="5" step="0.1" value="3.0">
+        <div class="controls-row" style="margin-top:8px;">
+          <button class="btn" onclick="setVin(-1.0)">反向 −1.0 V</button>
+          <button class="btn" onclick="setVin(0.4)">門檻以下 0.4 V</button>
+          <button class="btn" onclick="setVin(0.7)">臨界 0.7 V</button>
+          <button class="btn" onclick="setVin(5.0)">導通 5.0 V</button>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><div class="k">判斷狀態</div><div class="v" id="simState">導通 ON</div></div>
+          <div class="metric"><div class="k">二極體跨壓 V<sub>D</sub></div><div class="v" id="simVd">0.70 V</div></div>
+          <div class="metric"><div class="k">迴路電流 I<sub>D</sub></div><div class="v" id="simId">2.30 mA</div></div>
+        </div>
+        <div class="callout accent" id="simCheckBox" style="margin-top:12px;margin-bottom:0;"></div>
+      </div>
+      <div class="svg-box">
+        <svg viewBox="0 0 420 230" aria-label="單二極體導通互動電路圖">
+          <!-- Loop wires -->
+          <rect x="65" y="45" width="290" height="145" rx="6" fill="none" stroke="#172030" stroke-width="3" id="simLoopWire"/>
+          <!-- Voltage Source on left -->
+          <circle cx="65" cy="118" r="26" fill="#fff" stroke="#1b5e9e" stroke-width="3"/>
+          <text x="65" y="114" text-anchor="middle" font-size="13" font-weight="800" fill="#1b5e9e" id="svgVinSign">+</text>
+          <text x="65" y="131" text-anchor="middle" font-size="12" font-weight="700" fill="#52627a">V_in</text>
+          <text x="20" y="122" font-size="12" font-weight="700" fill="#1b5e9e" id="svgVinVal">3.0V</text>
+          <!-- Resistor on top -->
+          <rect x="130" y="33" width="84" height="24" rx="4" fill="#fff" stroke="#172030" stroke-width="2.5"/>
+          <text x="172" y="49" text-anchor="middle" font-size="12" font-weight="700" fill="#172030">R = 1 kΩ</text>
+          <!-- Diode on right (pointing down A->K) -->
+          <polygon points="338,95 372,95 355,130" fill="#e6f6f3" stroke="#0f7b6c" stroke-width="3" id="simDiodeTri"/>
+          <line x1="336" y1="130" x2="374" y2="130" stroke="#0f7b6c" stroke-width="5" id="simDiodeBar"/>
+          <text x="386" y="102" font-size="13" font-weight="800" fill="#1b5e9e">A</text>
+          <text x="386" y="136" font-size="13" font-weight="800" fill="#0f7b6c">K</text>
+          <!-- Current flow indicator -->
+          <g id="simFlowGroup">
+            <path d="M 245 45 L 295 45" stroke="#0f7b6c" stroke-width="4" marker-end="url(#arrSim)"/>
+            <text x="270" y="30" text-anchor="middle" font-size="12" font-weight="800" fill="#0f7b6c" id="svgIdText">I_D = 2.30 mA</text>
+          </g>
+          <text x="210" y="212" text-anchor="middle" font-size="12" fill="#52627a" id="svgModelCaption">固定壓降模型（CVD，矽二極體近似 V_F = 0.7 V）</text>
+          <defs>
+            <marker id="arrSim" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#0f7b6c"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="svg-caption">圖 3：串聯單二極體電路（當 V<sub>in</sub> &gt; 0.7 V 時依 CVD 模型導通）</div>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/procedures/diode-conduction-assume-and-check.md</code> · <code>wiki/concepts/diode-circuit-models.md</code></span>
+    <span>備註：此為 CVD 簡化模型教學模擬，非指數型精確特性</span>
+  </div>
+</section>
+
+<!-- SLIDE 7: Half-Wave vs Full-Wave Rectification -->
+<section class="slide" data-title="半波與全波整流原理">
+  <div class="slide-body">
+    <span class="eyebrow">06 / 整流原理與波形比較（S04）</span>
+    <h2>半波整流 vs 全波整流：脈動頻率 f 與 2f、固定極性 ≠ 平滑直流</h2>
+    <p><strong>整流（Rectification）</strong>利用二極體的方向性，把正負交替的交流電（AC）轉為負載端<strong>極性固定</strong>的脈動輸出。</p>
+    <div class="grid-2">
+      <div class="svg-box">
+        <svg id="waveHalf" viewBox="0 0 420 155" aria-label="半波整流波形圖"></svg>
+        <div class="svg-caption"><strong>半波整流</strong>：只利用輸入的 1 個半週；理想正弦輸入頻率 <code>f</code> → 輸出脈動頻率 <strong><code>f</code></strong></div>
+      </div>
+      <div class="svg-box">
+        <svg id="waveFull" viewBox="0 0 420 155" aria-label="全波整流波形圖"></svg>
+        <div class="svg-caption"><strong>全波整流</strong>：正、負兩半週皆轉為同一極性；理想正弦輸入頻率 <code>f</code> → 輸出脈動頻率 <strong><code>2f</code></strong></div>
+      </div>
+    </div>
+    <div class="grid-2" style="margin-top:8px;">
+      <div class="card">
+        <h3>為什麼全波比半波更有優勢？</h3>
+        <ul style="margin:0;font-size:0.93rem;">
+          <li>半波有長達半個週期的零輸出空檔；全波把負半週也翻正加以利用。</li>
+          <li>全波脈動頻率加倍為 <code>2f</code>，波峰間隔減半，更有利於後續加上濾波電路。</li>
+        </ul>
+      </div>
+      <div class="card warn">
+        <h3 style="color:var(--warn);">關鍵區分（對應迷思 M6、M7）</h3>
+        <p style="margin:0;font-size:0.93rem;"><strong>固定極性</strong>（電流不再反轉）<strong>不等於平滑直流（Smooth DC）</strong>！整流輸出仍含明顯<strong>漣波</strong>（波浪起伏），若要平直直流還需外加<strong>濾波（filtering）</strong>。（註：濾波 RC 計算超出目前 5 份來源範圍。）</p>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/rectification-half-and-full-wave.md</code> · <code>wiki/misconceptions/common-diode-and-rectifier-misconceptions.md</code> (M6, M7)</span>
+    <span>原始導讀：<code>raw/S04_AAC_整流電路.md</code>（All About Circuits）</span>
+  </div>
+</section>
+
+<!-- SLIDE 8: Query Q3 — Bridge Rectifier Interactive Circuit -->
+<section class="slide" data-title="Query Q3：橋式整流互動路徑圖">
+  <div class="slide-body">
+    <span class="eyebrow">07 / Query Q3 教學成果 · 橋式整流互動電路（S05）</span>
+    <h2>橋式全波整流器：正／負半週各哪兩顆導通？為何負載電流同向？</h2>
+    <div class="controls-row">
+      <button class="btn teal active" id="btnPos" onclick="setBridgeMode('pos')">正半週（AC+ 高，D1 &amp; D2 導通）</button>
+      <button class="btn primary" id="btnNeg" onclick="setBridgeMode('neg')">負半週（AC− 高，D3 &amp; D4 導通）</button>
+      <button class="btn warn" id="btnDead" onclick="setBridgeMode('dead')">死區（|v_s| ≤ 2V_F，全截止）</button>
+    </div>
+    <div class="grid-2" style="align-items:stretch;">
+      <div class="svg-box">
+        <svg viewBox="0 0 540 310" aria-label="橋式整流器四顆二極體互動電路圖">
+          <!-- AC Source -->
+          <circle cx="55" cy="145" r="28" fill="#fff" stroke="#1b5e9e" stroke-width="2.5"/>
+          <path d="M 41 145 Q 48 131 55 145 T 69 145" fill="none" stroke="#1b5e9e" stroke-width="2.5"/>
+          <text x="55" y="106" text-anchor="middle" font-size="13" font-weight="800" id="lblAcTop" fill="#0f7b6c">AC+ (+)</text>
+          <text x="55" y="192" text-anchor="middle" font-size="13" font-weight="800" id="lblAcBot" fill="#52627a">AC− (−)</text>
+
+          <!-- AC feed wires -->
+          <polyline points="55,117 55,35 260,35" fill="none" stroke="#94a3b8" stroke-width="3" id="wAcTop"/>
+          <polyline points="55,173 55,255 260,255" fill="none" stroke="#94a3b8" stroke-width="3" id="wAcBot"/>
+
+          <!-- Bridge diamond wires (edges) -->
+          <line x1="260" y1="35" x2="370" y2="145" stroke="#94a3b8" stroke-width="3" id="wD1"/>
+          <line x1="150" y1="145" x2="260" y2="255" stroke="#94a3b8" stroke-width="3" id="wD2"/>
+          <line x1="260" y1="255" x2="370" y2="145" stroke="#94a3b8" stroke-width="3" id="wD3"/>
+          <line x1="150" y1="145" x2="260" y2="35" stroke="#94a3b8" stroke-width="3" id="wD4"/>
+
+          <!-- Output rails to Load RL (with clean bridge hop at x=120, y=255) -->
+          <polyline points="370,145 480,145 480,108" fill="none" stroke="#94a3b8" stroke-width="3" id="wOutTop"/>
+          <path d="M 150 145 L 120 145 L 120 247 A 8 8 0 0 1 120 263 L 120 288 L 480 288 L 480 184" fill="none" stroke="#94a3b8" stroke-width="3" id="wOutBot"/>
+
+          <!-- Load Resistor RL on right -->
+          <rect x="462" y="108" width="36" height="76" rx="6" fill="#fff" stroke="#172030" stroke-width="2.5" id="boxRL"/>
+          <text x="480" y="151" text-anchor="middle" font-size="13" font-weight="800" fill="#172030">R_L</text>
+          <text x="512" y="114" font-size="12" font-weight="800" fill="#0f7b6c">V_out+</text>
+          <text x="512" y="186" font-size="12" font-weight="800" fill="#52627a">V_out−</text>
+          <!-- Load current arrow (ALWAYS downward V_out+ -> V_out-) -->
+          <g id="loadArrowGrp">
+            <path d="M 446 116 L 446 176" stroke="#0f7b6c" stroke-width="3.5" marker-end="url(#arrLoad)"/>
+            <text x="438" y="150" text-anchor="end" font-size="11" font-weight="800" fill="#0f7b6c">I_L 同向</text>
+          </g>
+
+          <!-- D1: AC+(260,35) -> V_out+(370,145), midpoint (315,90), angle +45 -->
+          <g id="gD1" transform="translate(315,90) rotate(45)">
+            <polygon points="-13,-11 -13,11 11,0" fill="#e6f6f3" stroke="#0f7b6c" stroke-width="2.5"/>
+            <line x1="11" y1="-12" x2="11" y2="12" stroke="#0f7b6c" stroke-width="4"/>
+          </g>
+          <text x="336" y="76" font-size="13" font-weight="800" id="tD1" fill="#0f7b6c">D1</text>
+
+          <!-- D2: V_out-(150,145) -> AC-(260,255), midpoint (205,200), angle +45 -->
+          <g id="gD2" transform="translate(205,200) rotate(45)">
+            <polygon points="-13,-11 -13,11 11,0" fill="#e6f6f3" stroke="#0f7b6c" stroke-width="2.5"/>
+            <line x1="11" y1="-12" x2="11" y2="12" stroke="#0f7b6c" stroke-width="4"/>
+          </g>
+          <text x="174" y="218" font-size="13" font-weight="800" id="tD2" fill="#0f7b6c">D2</text>
+
+          <!-- D3: AC-(260,255) -> V_out+(370,145), midpoint (315,200), angle -45 -->
+          <g id="gD3" transform="translate(315,200) rotate(-45)">
+            <polygon points="-13,-11 -13,11 11,0" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.5"/>
+            <line x1="11" y1="-12" x2="11" y2="12" stroke="#94a3b8" stroke-width="4"/>
+          </g>
+          <text x="336" y="220" font-size="13" font-weight="800" id="tD3" fill="#94a3b8">D3</text>
+
+          <!-- D4: V_out-(150,145) -> AC+(260,35), midpoint (205,90), angle -45 -->
+          <g id="gD4" transform="translate(205,90) rotate(-45)">
+            <polygon points="-13,-11 -13,11 11,0" fill="#f1f5f9" stroke="#94a3b8" stroke-width="2.5"/>
+            <line x1="11" y1="-12" x2="11" y2="12" stroke="#94a3b8" stroke-width="4"/>
+          </g>
+          <text x="174" y="76" font-size="13" font-weight="800" id="tD4" fill="#94a3b8">D4</text>
+
+          <!-- Vertices -->
+          <circle cx="260" cy="35" r="5" fill="#172030"/>
+          <circle cx="260" cy="255" r="5" fill="#172030"/>
+          <circle cx="370" cy="145" r="5" fill="#0f7b6c"/>
+          <circle cx="150" cy="145" r="5" fill="#52627a"/>
+
+          <defs>
+            <marker id="arrLoad" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 Z" fill="#0f7b6c"/>
+            </marker>
+          </defs>
+        </svg>
+        <div class="svg-caption">圖 4：橋式整流器四顆二極體（D1–D4 為教學追蹤編號慣例，陰極線皆正確指向輸出或低電位端）</div>
+      </div>
+      <div class="card" id="bridgeExplainCard">
+        <h3 id="bridgeTitle">正半週導通狀態</h3>
+        <p id="bridgePath" style="font-weight:700;color:var(--accent);"></p>
+        <p id="bridgeDesc" style="font-size:0.94rem;"></p>
+        <div class="callout primary" style="margin-bottom:0;">
+          <strong>為何負載電流永遠同向？</strong><br>
+          <code>V_out+</code> 連接 <code>D1、D3</code> 的<strong>陰極 K</strong>（電流只進不出）；<code>V_out−</code> 連接 <code>D2、D4</code> 的<strong>陽極 A</strong>（電流只出不進）。無論正負半週，電流皆由 <code>V_out+</code> 進入負載 <code>R_L</code>、由 <code>V_out−</code> 流出！
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/bridge-rectifier.md</code> · <code>wiki/procedures/bridge-current-path-tracing.md</code> · <code>reports/query-verification.md</code> (Q3)</span>
+    <span>原始導讀：<code>raw/S05_AAC_橋式整流器.md</code>（All About Circuits）</span>
+  </div>
+</section>
+
+<!-- SLIDE 9: Bridge Voltage Drop Equation & Example -->
+<section class="slide" data-title="橋式整流壓降公式與計算例題">
+  <div class="slide-body">
+    <span class="eyebrow">08 / 橋式整流壓降與計算（S03 + S05）</span>
+    <h2>橋式整流的輸出電壓：為什麼要扣除「兩顆」二極體壓降？</h2>
+    <p>因為每個正常導通半週的完整電流迴路都串聯經過<strong>兩顆</strong>二極體（正半週 <code>D1 + D2</code>；負半週 <code>D3 + D4</code>），<strong>絕非四顆同時導通，也絕非只扣一顆</strong>。</p>
+    <div class="formula-box">
+      v<sub>o</sub>(t) ≈ max( |v<sub>s</sub>(t)| − 2 V<sub>F</sub> , 0 )
+      <span class="formula-sub">適用三大簡化前提：① 固定壓降模型（CVD） ② 純電阻負載 ③ 未加濾波電路</span>
+    </div>
+    <div class="grid-2">
+      <div class="card primary">
+        <h3>經典例題演算（對應 03_查詢與檢查驗證情境）</h3>
+        <p>若交流輸入當下瞬間絕對值 <strong><code>|v_s| = 10 V</code></strong>，採用矽二極體固定壓降模型近似 <strong><code>V_F ≈ 0.7 V</code></strong>：</p>
+        <div class="formula-box" style="margin:8px 0;padding:12px;font-size:1.15rem;">
+          v<sub>o</sub> ≈ 10 V − 2 × 0.7 V = <strong>8.6 V</strong>
+        </div>
+        <ul style="font-size:0.9rem;margin-bottom:0;">
+          <li>總正向壓降為 <code>2 × 0.7 V = 1.4 V</code>（非 <code>0.7 V</code>，也不是 <code>4 × 0.7 V</code>）。</li>
+          <li>當 <code>|v_s(t)| ≤ 1.4 V</code> 時進入<strong>死區（dead zone）</strong>，輸出近似 <code>0 V</code>。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>教學雙重核對清單</h3>
+        <ol style="font-size:0.94rem;">
+          <li><strong>核對導通顆數</strong>：任一導通半週僅 2 顆串聯導通、另 2 顆反偏截止。</li>
+          <li><strong>核對模型前提</strong>：<code>0.7 V</code> 是矽 CVD 近似值，並非恆定物理常數。</li>
+          <li><strong>核對負載極性與輸出型態</strong>：兩半週負載皆為 <code>V_out+ → V_out−</code>，但輸出仍為頻率 <code>2f</code> 的固定極性脈動波形，不等於無漣波平滑 DC。</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/bridge-rectifier.md</code> · <code>wiki/misconceptions/common-diode-and-rectifier-misconceptions.md</code> (M8, M9)</span>
+    <span>原始導讀：<code>raw/S05_AAC_橋式整流器.md</code> · <code>raw/S03_LibreTexts_二極體分析模型.md</code></span>
+  </div>
+</section>
+
+<!-- SLIDE 10: Misconceptions Summary -->
+<section class="slide" data-title="初學者常見誤區排雷">
+  <div class="slide-body">
+    <span class="eyebrow">09 / 常見錯誤排雷（跨 S01～S05 累積）</span>
+    <h2>初學者最常踩的 6 大誤區（整理自 Wiki 迷思庫 M1～M9）</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>基礎與模型類（M1–M5）</h3>
+        <ul style="font-size:0.92rem;margin:0;">
+          <li><strong>M1／M4（神化 0.7 V）</strong>：誤認所有二極體導通都恆等於 <code>0.7 V</code> 或一超過就瞬間出固定電流。<br>→ <em>正解</em>：<code>0.7 V</code> 僅為矽二極體 CVD 模型的入門近似值。</li>
+          <li><strong>M3（沒標 A/K 或只看單點電位）</strong>：把陰極橫線端看反，或以為陽極接正電就必正偏。<br>→ <em>正解</em>：偏壓看 <code>V_A − V_K</code> 相對電位差。</li>
+          <li><strong>M5（只假設不驗證／誤用疊加）</strong>：算出負電流仍照抄答案。<br>→ <em>正解</em>：非線性電路須「假設 → 計算 → 驗證」，矛盾就改假設重算。</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>整流與橋式類（M6–M9）</h3>
+        <ul style="font-size:0.92rem;margin:0;">
+          <li><strong>M6（整流 ＝ 平滑直流）</strong>：誤認整流後波形會直接變平直。<br>→ <em>正解</em>：整流只給出「固定極性脈動輸出」，平滑需額外濾波。</li>
+          <li><strong>M7（搞混脈動頻率）</strong>：誤以為全波脈動頻率仍是 <code>f</code>。<br>→ <em>正解</em>：理想正弦輸入下，半波為 <code>f</code>、全波為 <code>2f</code>。</li>
+          <li><strong>M8／M9（橋式顆數與壓降算錯）</strong>：誤認 4 顆同時導通，或只扣 1 顆 <code>0.7 V</code>。<br>→ <em>正解</em>：每半週僅 <strong>2 顆</strong>串聯導通、扣 <code>2 V_F</code>，且兩半週負載電流同向。</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/misconceptions/common-diode-and-rectifier-misconceptions.md</code> (M1–M9)</span>
+    <span>原始導讀：<code>raw/S01</code>～<code>raw/S05</code>（皆附公開教材 URL）</span>
+  </div>
+</section>
+
+<!-- SLIDE 11: Interactive Quiz -->
+<section class="slide" data-title="互動自我檢測">
+  <div class="slide-body">
+    <span class="eyebrow">10 / 互動測驗 · 立即驗收核心觀念</span>
+    <h2>自我檢測：三題確認你已避開所有高頻陷阱</h2>
+
+    <div class="quiz-item" data-quiz="q1">
+      <h3>Q1. 關於矽二極體常見的「0.7 V」，下列哪一項敘述最準確？</h3>
+      <div class="quiz-opts">
+        <button class="btn" onclick="checkQuiz('q1',false,this,'再想想：真實二極體壓降會隨電流與材料改變，並非所有條件下皆恆定。')">A. 是所有二極體在任何電流下絕對不變的物理常數</button>
+        <button class="btn" onclick="checkQuiz('q1',true,this,'正確！0.7 V 是矽二極體在固定壓降模型（CVD）中的入門近似條件（來源：S03 / M4）。')">B. 是矽二極體在固定壓降模型（CVD）中的常用近似值</button>
+        <button class="btn" onclick="checkQuiz('q1',false,this,'再想想：S01 特別提醒，不可把正向導通簡化為超過 0.7 V 就瞬間出現固定電流。')">C. 電壓只要一超過 0.7 V，就會瞬間固定輸出相同電流</button>
+      </div>
+      <div class="quiz-fb" id="fb-q1"></div>
+    </div>
+
+    <div class="quiz-item" data-quiz="q2">
+      <h3>Q2. 橋式全波整流器在正常導通的單一半週中，電流迴路經過幾顆二極體？若 |v_s| = 10 V、V_F ≈ 0.7 V（無濾波純電阻負載），輸出約為多少？</h3>
+      <div class="quiz-opts">
+        <button class="btn" onclick="checkQuiz('q2',false,this,'不對喔！每半週不是只經過 1 顆，必須一進一出各過 1 顆才形成完整迴路。')">A. 經過 1 顆，輸出約 9.3 V</button>
+        <button class="btn" onclick="checkQuiz('q2',true,this,'完全正確！每導通半週串聯經過 2 顆二極體（正半週 D1/D2、負半週 D3/D4），10 − 2×0.7 = 8.6 V（來源：S05 / M8）。')">B. 經過 2 顆，輸出約 8.6 V</button>
+        <button class="btn" onclick="checkQuiz('q2',false,this,'小心陷阱！四顆二極體並非同時導通，另兩顆處於反向偏壓截止狀態。')">C. 4 顆同時導通，輸出約 7.2 V</button>
+      </div>
+      <div class="quiz-fb" id="fb-q2"></div>
+    </div>
+
+    <div class="quiz-item" data-quiz="q3">
+      <h3>Q3. 頻率為 f 的理想正弦波經過橋式全波整流（未加濾波）後，負載端波形的特性為何？</h3>
+      <div class="quiz-opts">
+        <button class="btn" onclick="checkQuiz('q3',false,this,'再核對 S04：未加濾波時仍有明顯起伏，不會直接變成無漣波平滑直線。')">A. 直接成為完全沒有漣波的平滑直線直流</button>
+        <button class="btn" onclick="checkQuiz('q3',false,this,'那是半波整流的脈動頻率！全波把負半週也翻正，每個週期有兩個波峰。')">B. 固定極性脈動輸出，脈動頻率為 f</button>
+        <button class="btn" onclick="checkQuiz('q3',true,this,'答對了！全波整流輸出為固定極性的脈動波形，理想正弦輸入下脈動頻率為 2f，若要平滑直流還需濾波（來源：S04 / M6、M7）。')">C. 固定極性脈動輸出，脈動頻率為 2f</button>
+      </div>
+      <div class="quiz-fb" id="fb-q3"></div>
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>Wiki 來源：<code>wiki/concepts/diode-circuit-models.md</code> · <code>wiki/concepts/bridge-rectifier.md</code> · <code>wiki/concepts/rectification-half-and-full-wave.md</code></span>
+    <span>對應迷思：M1、M4、M6、M7、M8</span>
+  </div>
+</section>
+
+<!-- SLIDE 12: Sources, Scope & LLM Wiki Loop/Graph -->
+<section class="slide" data-title="來源溯源與 LLM Wiki 流程">
+  <div class="slide-body">
+    <span class="eyebrow">11 / 溯源、邊界與可解釋 Loop / Graph</span>
+    <h2>知識來源清單、已知邊界與 LLM Wiki 建置閉環</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>5 份原始來源（皆為附公開 URL 之中文改寫導讀筆記）</h3>
+        <ol style="font-size:0.86rem;line-height:1.65;margin:0;">
+          <li><code>raw/S01_OpenStax_PN接面.md</code> — <a href="https://openstax.org/books/university-physics-volume-3/pages/9-7-semiconductor-devices" target="_blank" rel="noopener">OpenStax 9.7 Semiconductor Devices</a></li>
+          <li><code>raw/S02_AAC_二極體符號方向.md</code> — <a href="https://www.allaboutcircuits.com/textbook/semiconductors/chpt-3/introduction-to-diodes-and-rectifiers/" target="_blank" rel="noopener">AAC: Intro to Diodes &amp; Rectifiers</a></li>
+          <li><code>raw/S03_LibreTexts_二極體分析模型.md</code> — <a href="https://eng.libretexts.org/Bookshelves/Electrical_Engineering/Electronics/Semiconductor_Devices_-_Theory_and_Application_%28Fiore%29/02%253A_PN_Junctions_and_Diodes/2.4%253A_Diode_Circuit_Models" target="_blank" rel="noopener">LibreTexts 2.4 Diode Circuit Models</a></li>
+          <li><code>raw/S04_AAC_整流電路.md</code> — <a href="https://www.allaboutcircuits.com/textbook/semiconductors/chpt-3/rectifier-circuits/" target="_blank" rel="noopener">AAC: Rectifier Circuits</a></li>
+          <li><code>raw/S05_AAC_橋式整流器.md</code> — <a href="https://www.allaboutcircuits.com/textbook/experiments/chpt-5/full-wave-bridge-rectifier/" target="_blank" rel="noopener">AAC: Si Lab Full-wave Bridge Rectifier</a></li>
+        </ol>
+      </div>
+      <div class="card">
+        <h3>可解釋雙迴圈流程（對應 <code>flow/workflow.mmd</code>）</h3>
+        <ul style="font-size:0.88rem;line-height:1.65;margin:0;">
+          <li><strong>階段 1</strong>：先討論與唯讀盤點，隔離 <code>reference/</code> 範例，不偽造進度。</li>
+          <li><strong>階段 2（Ingest Loop ×5）</strong>：逐篇讀取 <code>S01→S05</code>，建立概念／流程／迷思頁並同步記錄 <code>wiki/index.md</code> 與 <code>wiki/log.md</code>。</li>
+          <li><strong>階段 3（Query &amp; Lint Gate）</strong>：執行 Q1–Q3 實測與全庫 Lint，抓出並修正過期語句、初學者術語缺解釋、URL 漏列與邊界符號微差。</li>
+          <li><strong>階段 4（雙退回生成）</strong>：知識錯誤退修 <code>wiki/</code>；純版面／互動問題只修 <code>outputs/index.html</code>，過程載於 <code>reports/workflow-reflection.md</code>。</li>
+        </ul>
+      </div>
+    </div>
+    <div class="callout warn" style="margin-top:12px;">
+      <strong>誠實聲明與未涵蓋知識邊界</strong>：本簡報嚴格以 <code>wiki/</code> 既有 5 份來源筆記為基礎，<strong>不編造</strong>來源未涵蓋之 Shockley 指數公式、電容濾波 RC 計算、反向峰值耐壓（PIV）規格與示波器共地接線細節。
+    </div>
+  </div>
+  <div class="source-footer">
+    <span>核心紀錄：<code>AGENTS.md</code> · <code>wiki/log.md</code> · <code>reports/query-verification.md</code> · <code>reports/lint-report.md</code> · <code>reports/workflow-reflection.md</code></span>
+    <span>簡報檔路徑：<code>outputs/index.html</code></span>
+  </div>
+</section>
+
+</main>
+
+<footer class="nav-footer">
+  <div class="dots" id="dots" aria-label="投影片快速跳轉"></div>
+  <div class="nav-btns">
+    <button class="btn" id="prevBtn" disabled>← 上一頁</button>
+    <button class="btn primary" id="nextBtn">下一頁 →</button>
+  </div>
+</footer>
+
+<script>
+// === Slide Navigation ===
+const slides = Array.from(document.querySelectorAll('section.slide'));
+const dotsWrap = document.getElementById('dots');
+const counterEl = document.getElementById('counter');
+const progressBar = document.getElementById('progressBar');
+const prevBtn = document.getElementById('prevBtn');
+const nextBtn = document.getElementById('nextBtn');
+let current = 0;
+
+slides.forEach((s, i) => {
+  const d = document.createElement('button');
+  d.className = 'dot' + (i === 0 ? ' active' : '');
+  d.title = `${i + 1}. ${s.dataset.title || ''}`;
+  d.setAttribute('aria-label', `跳至第 ${i + 1} 頁`);
+  d.onclick = () => goTo(i);
+  dotsWrap.appendChild(d);
+});
+const dots = Array.from(dotsWrap.querySelectorAll('.dot'));
+
+function goTo(idx) {
+  current = Math.max(0, Math.min(slides.length - 1, idx));
+  slides.forEach((s, i) => s.classList.toggle('active', i === current));
+  dots.forEach((d, i) => d.classList.toggle('active', i === current));
+  counterEl.textContent = `${String(current + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+  progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+  prevBtn.disabled = current === 0;
+  nextBtn.disabled = current === slides.length - 1;
+  window.scrollTo({ top: 0, behavior: 'instant' });
+}
+prevBtn.onclick = () => goTo(current - 1);
+nextBtn.onclick = () => goTo(current + 1);
+document.addEventListener('keydown', (e) => {
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'ArrowRight' || e.key === 'PageDown') goTo(current + 1);
+  if (e.key === 'ArrowLeft' || e.key === 'PageUp') goTo(current - 1);
+});
+
+// === Slide 6: Interactive Conduction Simulator (CVD V_F = 0.7 V, R = 1 kOhm) ===
+const vinSlider = document.getElementById('vinSlider');
+function updateSim(val) {
+  const vin = parseFloat(val);
+  const vf = 0.7;
+  document.getElementById('vinLabel').textContent = `${vin.toFixed(1)} V`;
+  document.getElementById('svgVinVal').textContent = `${vin.toFixed(1)}V`;
+  document.getElementById('svgVinSign').textContent = vin >= 0 ? '+' : '−';
+
+  const stateEl = document.getElementById('simState');
+  const vdEl = document.getElementById('simVd');
+  const idEl = document.getElementById('simId');
+  const checkBox = document.getElementById('simCheckBox');
+  const tri = document.getElementById('simDiodeTri');
+  const bar = document.getElementById('simDiodeBar');
+  const flow = document.getElementById('simFlowGroup');
+  const idTxt = document.getElementById('svgIdText');
+
+  if (vin > vf) {
+    const idMa = (vin - vf); // since R = 1 kOhm, mA = V
+    stateEl.textContent = '導通 ON';
+    stateEl.className = 'v status-on';
+    vdEl.textContent = '0.70 V';
+    idEl.textContent = `${idMa.toFixed(2)} mA`;
+    tri.setAttribute('fill', '#e6f6f3'); tri.setAttribute('stroke', '#0f7b6c');
+    bar.setAttribute('stroke', '#0f7b6c');
+    flow.style.display = 'inline';
+    idTxt.textContent = `I_D = ${idMa.toFixed(2)} mA`;
+    checkBox.className = 'callout accent';
+    checkBox.innerHTML = `<strong>驗證通過（ON 成立）</strong>：假設導通算得 <code>I_D = (${vin.toFixed(1)} − 0.7) / 1 kΩ = ${idMa.toFixed(2)} mA &gt; 0</code>，方向符合 <code>A → K</code>。`;
+  } else {
+    stateEl.textContent = vin === vf ? '臨界 OFF' : '截止 OFF';
+    stateEl.className = 'v status-off';
+    vdEl.textContent = `${vin.toFixed(2)} V`;
+    idEl.textContent = '0.00 mA';
+    tri.setAttribute('fill', '#fdecec'); tri.setAttribute('stroke', '#b91c1c');
+    bar.setAttribute('stroke', '#b91c1c');
+    flow.style.display = 'none';
+    const fakeId = (vin - vf).toFixed(2);
+    checkBox.className = 'callout warn';
+    checkBox.innerHTML = vin === vf
+      ? `<strong>臨界邊界</strong>：<code>V_in = 0.7 V</code> 剛好達近似門檻，<code>I_D = 0 mA</code>，視為截止臨界點。`
+      : `<strong>驗證結果（OFF 成立）</strong>：若先假設 ON 會算出負電流 <code>${fakeId} mA &lt; 0</code>（矛盾！），故改假設開路 OFF，開路跨壓 <code>V_D = ${vin.toFixed(1)} V ≤ 0.7 V</code> 成立。`;
+  }
+}
+function setVin(v) { vinSlider.value = v; updateSim(v); }
+vinSlider.addEventListener('input', (e) => updateSim(e.target.value));
+updateSim(vinSlider.value);
+
+// === Slide 7: Half-Wave & Full-Wave SVG Waveforms ===
+function drawWave(svgId, mode) {
+  const svg = document.getElementById(svgId);
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs) => {
+    const n = document.createElementNS(ns, tag);
+    Object.entries(attrs).forEach(([k, v]) => n.setAttribute(k, v));
+    return n;
+  };
+  // Grid & axis
+  svg.appendChild(el('line', { x1: 24, y1: 98, x2: 404, y2: 98, stroke: '#94a3b8', 'stroke-width': 1.2 }));
+  svg.appendChild(el('line', { x1: 24, y1: 18, x2: 24, y2: 142, stroke: '#94a3b8', 'stroke-width': 1.2 }));
+  const lbl0 = el('text', { x: 10, y: 102, 'font-size': 11, fill: '#64748b' }); lbl0.textContent = '0'; svg.appendChild(lbl0);
+  const lblT = el('text', { x: 392, y: 114, 'font-size': 11, fill: '#64748b' }); lblT.textContent = 't'; svg.appendChild(lblT);
+
+  let dIn = '', dOut = '';
+  for (let i = 0; i <= 360; i += 2) {
+    const x = 28 + i;
+    const rad = (i / 360) * Math.PI * 4; // 2 full cycles
+    const s = Math.sin(rad);
+    const yIn = 98 - s * 42;
+    const vOut = mode === 'half' ? Math.max(0, s) : Math.abs(s);
+    const yOut = 98 - vOut * 66;
+    dIn += (i === 0 ? 'M' : 'L') + `${x},${yIn.toFixed(1)} `;
+    dOut += (i === 0 ? 'M' : 'L') + `${x},${yOut.toFixed(1)} `;
+  }
+  svg.appendChild(el('path', { d: dIn, fill: 'none', stroke: '#94a3b8', 'stroke-width': 1.6, 'stroke-dasharray': '5 4' }));
+  svg.appendChild(el('path', { d: dOut, fill: 'none', stroke: mode === 'half' ? '#1b5e9e' : '#0f7b6c', 'stroke-width': 3.2 }));
+
+  const legIn = el('text', { x: 250, y: 20, 'font-size': 11, fill: '#64748b' }); legIn.textContent = '--- 交流輸入 AC (f)'; svg.appendChild(legIn);
+  const legOut = el('text', { x: 40, y: 20, 'font-size': 11, 'font-weight': 700, fill: mode === 'half' ? '#1b5e9e' : '#0f7b6c' });
+  legOut.textContent = mode === 'half' ? '── 半波輸出（脈動頻率 f）' : '── 全波輸出（脈動頻率 2f）';
+  svg.appendChild(legOut);
+}
+drawWave('waveHalf', 'half');
+drawWave('waveFull', 'full');
+
+// === Slide 8: Interactive Bridge Rectifier ===
+function styleDiode(gid, tid, wid, activeColor) {
+  const g = document.getElementById(gid);
+  const t = document.getElementById(tid);
+  const w = document.getElementById(wid);
+  const poly = g.querySelector('polygon');
+  const line = g.querySelector('line');
+  if (activeColor) {
+    poly.setAttribute('fill', activeColor === '#0f7b6c' ? '#e6f6f3' : '#e7f1fb');
+    poly.setAttribute('stroke', activeColor);
+    line.setAttribute('stroke', activeColor);
+    t.setAttribute('fill', activeColor);
+    w.setAttribute('stroke', activeColor);
+    w.setAttribute('stroke-width', '4.2');
+  } else {
+    poly.setAttribute('fill', '#f1f5f9');
+    poly.setAttribute('stroke', '#94a3b8');
+    line.setAttribute('stroke', '#94a3b8');
+    t.setAttribute('fill', '#94a3b8');
+    w.setAttribute('stroke', '#cbd5e1');
+    w.setAttribute('stroke-width', '2.5');
+  }
+}
+
+function setBridgeMode(mode) {
+  document.getElementById('btnPos').classList.toggle('active', mode === 'pos');
+  document.getElementById('btnNeg').classList.toggle('active', mode === 'neg');
+  document.getElementById('btnDead').classList.toggle('active', mode === 'dead');
+
+  const acTop = document.getElementById('wAcTop');
+  const acBot = document.getElementById('wAcBot');
+  const outTop = document.getElementById('wOutTop');
+  const outBot = document.getElementById('wOutBot');
+  const loadGrp = document.getElementById('loadArrowGrp');
+  const lblTop = document.getElementById('lblAcTop');
+  const lblBot = document.getElementById('lblAcBot');
+  const title = document.getElementById('bridgeTitle');
+  const path = document.getElementById('bridgePath');
+  const desc = document.getElementById('bridgeDesc');
+
+  if (mode === 'pos') {
+    const c = '#0f7b6c';
+    styleDiode('gD1', 'tD1', 'wD1', c);
+    styleDiode('gD2', 'tD2', 'wD2', c);
+    styleDiode('gD3', 'tD3', 'wD3', null);
+    styleDiode('gD4', 'tD4', 'wD4', null);
+    [acTop, acBot, outTop, outBot].forEach(w => { w.setAttribute('stroke', c); w.setAttribute('stroke-width', '3.8'); });
+    loadGrp.style.display = 'inline';
+    lblTop.textContent = 'AC+ (高電位 +)'; lblTop.setAttribute('fill', c);
+    lblBot.textContent = 'AC− (低電位 −)'; lblBot.setAttribute('fill', '#52627a');
+    title.textContent = '正半週：D1 與 D2 串聯導通（D3、D4 反偏截止）';
+    path.style.color = c;
+    path.textContent = '路徑：AC+ → D1 → V_out+ → 負載 R_L（向下）→ V_out− → D2 → AC−';
+    desc.textContent = '只有兩顆二極體導通，電流經 D1 進入 V_out+、向下穿過負載 R_L，再經 D2 回到 AC−；總正向壓降約為 2 V_F。';
+  } else if (mode === 'neg') {
+    const c = '#1b5e9e';
+    styleDiode('gD1', 'tD1', 'wD1', null);
+    styleDiode('gD2', 'tD2', 'wD2', null);
+    styleDiode('gD3', 'tD3', 'wD3', c);
+    styleDiode('gD4', 'tD4', 'wD4', c);
+    [acTop, acBot, outTop, outBot].forEach(w => { w.setAttribute('stroke', c); w.setAttribute('stroke-width', '3.8'); });
+    loadGrp.style.display = 'inline';
+    lblTop.textContent = 'AC+ (低電位 −)'; lblTop.setAttribute('fill', '#52627a');
+    lblBot.textContent = 'AC− (高電位 +)'; lblBot.setAttribute('fill', c);
+    title.textContent = '負半週：D3 與 D4 串聯導通（D1、D2 反偏截止）';
+    path.style.color = c;
+    path.textContent = '路徑：AC− → D3 → V_out+ → 負載 R_L（依然向下！）→ V_out− → D4 → AC+';
+    desc.textContent = '交流極性反轉後改由 D3、D4 接力導通；電流依然從 V_out+ 向下流過負載 R_L 到 V_out−，方向完全不變！';
+  } else {
+    styleDiode('gD1', 'tD1', 'wD1', null);
+    styleDiode('gD2', 'tD2', 'wD2', null);
+    styleDiode('gD3', 'tD3', 'wD3', null);
+    styleDiode('gD4', 'tD4', 'wD4', null);
+    [acTop, acBot, outTop, outBot].forEach(w => { w.setAttribute('stroke', '#cbd5e1'); w.setAttribute('stroke-width', '2.5'); });
+    loadGrp.style.display = 'none';
+    lblTop.textContent = '|v_s| ≤ 2V_F'; lblTop.setAttribute('fill', '#b45309');
+    lblBot.textContent = '未達雙顆門檻'; lblBot.setAttribute('fill', '#b45309');
+    title.textContent = '死區（Dead Zone）：四顆二極體皆截止';
+    path.style.color = '#b45309';
+    path.textContent = '當 |v_s(t)| ≤ 2 V_F（矽 CVD 約 1.4 V）：I_L = 0，v_o ≈ 0 V';
+    desc.textContent = '在每個半週接近零交越處，輸入電壓不足以推動兩顆串聯二極體導通，因此輸出短暫為零。';
+  }
+}
+setBridgeMode('pos');
+
+// === Slide 11: Interactive Quiz ===
+function checkQuiz(qid, isCorrect, btn, msg) {
+  const box = document.querySelector(`[data-quiz="${qid}"]`);
+  box.querySelectorAll('button').forEach(b => b.classList.remove('active', 'teal', 'warn'));
+  btn.classList.add('active', isCorrect ? 'teal' : 'warn');
+  const fb = document.getElementById(`fb-${qid}`);
+  fb.textContent = msg;
+  fb.className = 'quiz-fb ' + (isCorrect ? 'ok' : 'no');
+}
+</script>
+</body>
+</html>
